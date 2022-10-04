@@ -1,0 +1,31 @@
+@page
+<div class="container">
+    <div class="row">&nbsp;</div>
+    <div class="row">
+        <div class="col-2">Topic</div>
+        <div class="col-4"><input type="text" id="userInput" value="ReceiveMessage" /></div>
+    </div>
+    <div class="row">
+        <div class="col-2">Payload</div>
+        <div class="col-4"><textarea rows="30" id="messageInput" style="width:30rem" placeholder="Type payload"></textarea></div>
+    </div>
+    <div class="row">&nbsp;</div>
+    <div class="row">
+        <div class="col-6">
+            <input type="button" id="sendButton" value="Send Message" />
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-12">
+        <hr />
+    </div>
+</div>
+<div class="row">
+    <div class="col-6">
+        <ul id="messagesList"></ul>
+    </div>
+</div>
+@* <script src="~/js/signalr/dist/browser/signalr.js"></script> *@
+<script src="~/lib/signalr.js"></script>
+<script src="~/js/echo.js"></script>
