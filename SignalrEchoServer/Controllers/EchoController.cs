@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using SignalrEchoServer.Services;
 
 namespace SignalrEchoServer.Controllers;
@@ -34,7 +33,7 @@ public class EchoController : ControllerBase
             await _echoService.Create(topic, resp);
 
             // Return data for debug
-            return Ok(resp);
+            return Content(resp, "application/json");
         }
         catch (Exception e)
         {

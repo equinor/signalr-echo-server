@@ -4,6 +4,19 @@ SignalR dynamic echo server for testing SignalR WebSocket functionality.
 
 This server is made to be a test tool for testing SignalR socket functionalities in responsive clients.
 
+**NB**
+
+Dynamic input body functionality (bring you own JSON),
+in combination with limitations in controlling the SignalR Serializer,
+means the payload of the WebSocket message is returned as a string.
+
+If your client code treats the SignalR payload as a `json` document directly, the payload must be parsed to support testing:
+```javascript
+JSON.parse(payload)
+```
+
+Adding this step will increase the input validation of your client, and should not affect your production functionality.
+
 ## Usage
 
 Download and run the docker image to host your own SignalR echo server
