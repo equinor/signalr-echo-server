@@ -1,0 +1,134 @@
+html {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: "Equinor", sans-serif;
+  height: 100%;
+  color: #212121;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  padding: 1rem 2rem;
+  border-bottom: 1px solid #ddd;
+}
+
+.github-link {
+  margin-left: auto;
+  cursor: pointer;
+}
+
+.a:hover {
+  opacity: 0.8;
+}
+
+h1 {
+  font-size: 2rem;
+  margin-left: 1em;
+}
+
+/** Button styles from EDS */
+button {
+  box-sizing: border-box;
+  text-decoration: none;
+  position: relative;
+  cursor: pointer;
+  display: inline-block;
+  background: var(--eds_interactive_primary__resting, rgba(0, 112, 121, 1));
+  height: var(--eds_button__height, 36px);
+  padding-left: var(--eds_button__padding_x, 16px);
+  padding-top: var(--eds_button__padding_y, 0);
+  padding-right: var(--eds_button__padding_x, 16px);
+  padding-bottom: var(--eds_button__padding_y, 0);
+  border: 1px solid
+    var(--eds_interactive_primary__resting, rgba(0, 112, 121, 1));
+  border-radius: var(--eds_button__radius, 4px);
+  margin: 0px;
+  color: var(--eds_text__static_icons__primary_white, rgba(255, 255, 255, 1));
+  font-size: var(--eds_button__font_size, 0.875rem);
+  font-weight: 500;
+  line-height: 1.143em;
+}
+
+button:hover {
+  background: var(--eds_interactive_primary__hover, rgba(0, 79, 85, 1));
+  border: 1px solid transparent;
+}
+
+main {
+  margin: 0 auto;
+  padding: 2rem;
+  display: flex;
+  column-gap: 2rem;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 2rem;
+  column-gap: 2rem;
+}
+
+label {
+  font-size: 1.2rem;
+  font-weight: 500;
+  line-height: 2;
+}
+p {
+  margin-top: 0.5em;
+  flex-shrink: 1;
+}
+
+.helper-text {
+  margin-top: 0;
+  font-size: 0.9em;
+}
+
+input,
+textarea {
+  display: block;
+  box-sizing: border-box;
+  appearance: none;
+  height: auto;
+  background: var(--eds_ui_background__light, rgba(247, 247, 247, 1));
+  margin-bottom: 0.4rem;
+  color: var(--eds_text__static_icons__default, rgba(61, 61, 61, 1));
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.5em;
+  letter-spacing: 0.025em;
+  text-align: left;
+  border: none;
+  padding: 6px 8px;
+  outline: transparent solid 1px;
+  outline-offset: 0px;
+  box-shadow: inset 0px -1px 0px 0px var(--eds_text__static_icons__tertiary, rgba(111, 111, 111, 1));
+  font-family: Equinor Mono, sans-serif !important;
+}
+
+textarea {
+  margin-bottom: 1rem;
+}
+
+input:focus,
+textarea:focus {
+  box-shadow: none;
+  outline: 2px solid
+    var(--eds_interactive_primary__resting, rgba(0, 112, 121, 1));
+  outline-offset: 0px;
+}
+
+#preview {
+  font-family: Equinor Mono, sans-serif;
+  white-space: pre;
+}
+
+code {
+  padding: 0.2em 0.6em;
+  margin: -1em 0;
+  border-radius: 0.4em;
+  background-color: #ddd;
+}
