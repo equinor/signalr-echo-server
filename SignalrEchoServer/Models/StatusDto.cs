@@ -9,5 +9,5 @@ public class StatusDto
 public class BuildInformationDto
 {
     public string Version { get; init; } = "0.0.0";
-    public DateTime Created { get; init; } = new();
+    public DateTime Created { get; init; }
 }
