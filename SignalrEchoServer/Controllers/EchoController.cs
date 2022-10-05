@@ -25,7 +25,7 @@ public class EchoController : ControllerBase
         {
             var data = JsonConvert.DeserializeObject<dynamic>(jsonData.ToString());
 
-            // Get fields from dunamic payload
+            // Get fields from dynamic input
             string topic = data["topic"];
             var payload = data["payload"];
 
