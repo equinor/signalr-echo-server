@@ -3,7 +3,10 @@
 const form = document.querySelector("form");
 const payloadInput = document.getElementById("payload");
 const topicInput = document.getElementById("topic");
-const preview = document.getElementById("preview");
+const topicReceived = document.getElementById("topic-received");
+const preview = document.getElementById("preview")
+
+const topics = []
 
 // Add auto rezise
 const initialScrollHeight = payload.scrollHeight;
@@ -43,8 +46,18 @@ const handleSubmit = () => {
     .catch((err) => console.error(err.toString()));
 };
 
+const addListener = (topic) => {
+  if (topics.includes(topic)) return;
+
+  connection.on(topic, (payload) => {
+    preview.textContent = formatResponseToOutput(payload);
+    topicReceived.textContent = topic
+  })
+}
+
 form.addEventListener("submit", (e) => {
   e.preventDefault();
+  addListener(topicInput.value);
   handleSubmit();
 });
 
@@ -58,9 +71,7 @@ topicInput.onkeydown = (e) => {
 
 const connection = new signalR.HubConnectionBuilder().withUrl("/echo").build();
 
-connection.on("ReceiveMessage", (payload) => {
-  preview.textContent = formatResponseToOutput(payload);
-});
+addListener("ReceiveMessage");
 
 connection
   .start()
