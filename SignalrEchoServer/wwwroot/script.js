@@ -1,31 +1,48 @@
 "use strict";
 
+// Elements
 const form = document.querySelector("form");
 const payloadInput = document.getElementById("payload");
+const addTopicButton = document.getElementById("add-topic");
 const topicInput = document.getElementById("topic");
 const topicReceived = document.getElementById("topic-received");
-const preview = document.getElementById("preview")
+const preview = document.getElementById("preview");
+const acitveSubscriptionsList = document.getElementById(
+  "active-subscriptions-list"
+);
 
-const topics = []
+const state = {
+  subscriptions: [],
+  initialScrollHeight: payloadInput.scrollHeight,
+};
+const renderSubscriptions = () => {
+  acitveSubscriptionsList.innerHTML = "";
+  state.subscriptions.forEach((topic) => {
+    const li = document.createElement("li");
+    li.onclick = () => unsubscribe(topic);
+    const code = document.createElement("code");
+    code.textContent = topic;
+    li.appendChild(code);
+    acitveSubscriptionsList.appendChild(li);
+  });
+};
 
 // Add auto rezise
-const initialScrollHeight = payload.scrollHeight;
-payload.setAttribute(
-  "style",
-  `height:${payload.scrollHeight}px;` + "overflow-y:hidden;"
-);
-payload.addEventListener("input", reziseTextarea, false);
-
 function reziseTextarea() {
-  if (this.scrollHeight === initialScrollHeight) return;
-  if (this.scrollHeight < initialScrollHeight) {
+  if (this.scrollHeight === state.initialScrollHeight) return;
+  if (this.scrollHeight < state.initialScrollHeight) {
     this.style.height = 0;
-    this.style.height = initialScrollHeight + "px";
+    this.style.height = state.initialScrollHeight + "px";
   } else {
     this.style.height = 0;
     this.style.height = this.scrollHeight + "px";
   }
 }
+payloadInput.setAttribute(
+  "style",
+  `height:${state.initialScrollHeight}px;` + "overflow-y:hidden;"
+);
+payloadInput.addEventListener("input", reziseTextarea, false);
 
 const formatResponseToOutput = (response) => {
   try {
@@ -35,43 +52,28 @@ const formatResponseToOutput = (response) => {
   }
 };
 
-const handleSubmit = () => {
-  const topic = topicInput.value;
-  let payload = payloadInput.value;
-  try {
-    payload = JSON.stringify(JSON.parse(payload));
-  } catch (e) {}
-  connection
-    .invoke("SendMessage", topic, payload)
-    .catch((err) => console.error(err.toString()));
-};
-
-const addListener = (topic) => {
-  if (topics.includes(topic)) return;
-
-  connection.on(topic, (payload) => {
-    preview.textContent = formatResponseToOutput(payload);
-    topicReceived.textContent = topic
-  })
+async function unsubscribe(topic) {
+  if (!state.subscriptions.includes(topic)) return;
+  state.subscriptions.splice(state.subscriptions.indexOf(topic), 1);
+  await connection.off(topic);
+  renderSubscriptions();
 }
 
-form.addEventListener("submit", (e) => {
-  e.preventDefault();
-  addListener(topicInput.value);
-  handleSubmit();
-});
+const subscribe = async (topic) => {
+  if (topic?.length) return;
+  if (state.subscriptions.includes(topic)) return;
 
-payloadInput.onkeydown = (e) => {
-  if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleSubmit();
-};
+  state.subscriptions.push(topic);
+  await connection.on(topic, (payload) => {
+    preview.textContent = formatResponseToOutput(payload);
+    topicReceived.textContent = topic;
+  });
 
-topicInput.onkeydown = (e) => {
-  if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleSubmit();
+  renderSubscriptions();
 };
 
 const connection = new signalR.HubConnectionBuilder().withUrl("/echo").build();
-
-addListener("ReceiveMessage");
+subscribe("ReceiveMessage");
 
 connection
   .start()
@@ -79,3 +81,35 @@ connection
     submitButton.disabled = false; // TODO: Implement
   }) */
   .catch((err) => console.error(err.toString()));
+
+const handleSubmit = async () => {
+  const topic = topicInput.value;
+  if (!topic.length) return;
+  await subscribe(topic);
+
+  let payload = payloadInput.value;
+  try {
+    payload = JSON.stringify(JSON.parse(payload)).replace(/\\/g, "");
+  } catch (e) {}
+  connection.invoke("SendMessage", topic, payload).catch(console.error);
+};
+
+const handleSetTopic = async () => {
+  await subscribe(topicInput.value);
+};
+
+const submitOnKeyStroke = (callback) => (e) => {
+  if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) callback();
+};
+
+// Event handlers
+payloadInput.onkeydown = submitOnKeyStroke(handleSubmit);
+topicInput.onkeydown = submitOnKeyStroke(handleSetTopic);
+addTopicButton.onclick = (e) => {
+  e.preventDefault();
+  if (topicInput.value.length) subscribe(topicInput.value);
+};
+form.addEventListener("submit", (e) => {
+  e.preventDefault();
+  handleSubmit();
+});
