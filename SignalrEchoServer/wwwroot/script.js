@@ -60,11 +60,11 @@ async function unsubscribe(topic) {
 }
 
 const subscribe = async (topic) => {
-  if (topic?.length) return;
+  if (!topic?.length) return;
   if (state.subscriptions.includes(topic)) return;
 
   state.subscriptions.push(topic);
-  await connection.on(topic, (payload) => {
+  connection.on(topic, (payload) => {
     preview.textContent = formatResponseToOutput(payload);
     topicReceived.textContent = topic;
   });
