@@ -1,70 +1,87 @@
 "use strict";
 
+/* Elements */
 const form = document.querySelector("form");
-const payloadInput = document.getElementById("payload");
+const addTopicButton = document.getElementById("add-topic");
 const topicInput = document.getElementById("topic");
+const topicReceived = document.getElementById("topic-received");
 const preview = document.getElementById("preview");
-
-// Add auto rezise
-const initialScrollHeight = payload.scrollHeight;
-payload.setAttribute(
-  "style",
-  `height:${payload.scrollHeight}px;` + "overflow-y:hidden;"
+const acitveSubscriptionsList = document.getElementById(
+  "active-subscriptions-list"
 );
-payload.addEventListener("input", reziseTextarea, false);
+const payloadInput = document.getElementById("payload");
+autoReziseTextarea(payloadInput);
 
-function reziseTextarea() {
-  if (this.scrollHeight === initialScrollHeight) return;
-  if (this.scrollHeight < initialScrollHeight) {
-    this.style.height = 0;
-    this.style.height = initialScrollHeight + "px";
-  } else {
-    this.style.height = 0;
-    this.style.height = this.scrollHeight + "px";
-  }
-}
-
-const formatResponseToOutput = (response) => {
-  try {
-    return JSON.stringify(JSON.parse(response), null, 2);
-  } catch (e) {
-    return response;
-  }
+/* Rendering callbacks */
+const renderSubscriptions = () => {
+  acitveSubscriptionsList.innerHTML = "";
+  subscriptions.forEach((topic) => {
+    const li = document.createElement("li");
+    li.onclick = () => unsubscribe(topic);
+    const code = document.createElement("code");
+    code.textContent = topic;
+    li.appendChild(code);
+    acitveSubscriptionsList.appendChild(li);
+  });
+};
+const handlePayloadReceived = (topic) => (payload) => {
+  topicReceived.textContent = topic;
+  preview.textContent = formatPayload(payload);
 };
 
-const handleSubmit = () => {
+/* Handle subscription on topics */
+const subscriptions = [];
+const unsubscribe = async (topic) => {
+  // Not subscribed to topic
+  if (!subscriptions.includes(topic)) return;
+
+  await connection.off(topic);
+  subscriptions.splice(subscriptions.indexOf(topic), 1);
+  renderSubscriptions();
+};
+
+const subscribe = async (topic) => {
+  // Undefined topic
+  if (!topic) return;
+  // Already subscribed
+  if (subscriptions.includes(topic)) return;
+
+  subscriptions.push(topic);
+  connection.on(topic, handlePayloadReceived(topic));
+  renderSubscriptions();
+};
+
+/* Start connection */
+const connection = new signalR.HubConnectionBuilder().withUrl("/echo").build();
+connection.start().catch(console.error);
+subscribe("ReceiveMessage"); // Subscribe on default message
+
+const handleSubmit = async () => {
   const topic = topicInput.value;
+  if (!topic.length) return;
+  await subscribe(topic);
+
   let payload = payloadInput.value;
   try {
     payload = JSON.stringify(JSON.parse(payload));
   } catch (e) {}
-  connection
-    .invoke("SendMessage", topic, payload)
-    .catch((err) => console.error(err.toString()));
+  connection.invoke("SendMessage", topic, payload).catch(console.error);
 };
 
+const handleSetTopic = async () => await subscribe(topicInput.value);
+
+const handleKeyStroke = (callback) => (e) => {
+  if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) callback();
+};
+
+/* Event handlers */
+payloadInput.onkeydown = handleKeyStroke(handleSubmit);
+topicInput.onkeydown = handleKeyStroke(handleSetTopic);
+addTopicButton.onclick = (e) => {
+  e.preventDefault();
+  if (topicInput.value.length) subscribe(topicInput.value);
+};
 form.addEventListener("submit", (e) => {
   e.preventDefault();
   handleSubmit();
 });
-
-payloadInput.onkeydown = (e) => {
-  if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleSubmit();
-};
-
-topicInput.onkeydown = (e) => {
-  if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleSubmit();
-};
-
-const connection = new signalR.HubConnectionBuilder().withUrl("/echo").build();
-
-connection.on("ReceiveMessage", (payload) => {
-  preview.textContent = formatResponseToOutput(payload);
-});
-
-connection
-  .start()
-  /* .then(function () {
-    submitButton.disabled = false; // TODO: Implement
-  }) */
-  .catch((err) => console.error(err.toString()));

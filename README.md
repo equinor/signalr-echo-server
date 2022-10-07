@@ -4,10 +4,29 @@ SignalR dynamic echo server for testing SignalR WebSocket functionality.
 
 This server is made to be a test tool for testing SignalR socket functionalities in responsive clients.
 
+## Usage
+
+Download and run the docker image to host your own SignalR echo server
+
+    docker pull ghcr.io/equinor/signalr-echo-server
+
+    docker run --rm -p 5000:5000 ghcr.io/equinor/signalr-echo-server
+
+This will host a webserver on port `5000`
+
+The backend SignalR server can host the WebSocket URL on any endpoint, but defaults to `/echo`.
+
+### Test SignalR Reactive Clients
+
+By connecting your SignalR application to the WebSocket endpoint (default `/echo`),
+you can test functionality by sending custom topics and payloads to the echo server, either by using the hosted web client,
+or by using Postman, or any other HTTP Tool.
+
+This will then be published on SignalR with the desired data.
+
 **NB**
 
-Dynamic input body functionality (bring you own JSON),
-in combination with limitations in controlling the SignalR Serializer,
+Dynamic input body functionality (bring your own JSON), in combination with limitations in controlling the SignalR Serializer,
 means the payload of the WebSocket message is returned as a string.
 
 If your client code treats the SignalR payload as a `json` document directly, the payload must be parsed to support testing:
@@ -17,19 +36,9 @@ JSON.parse(payload)
 
 Adding this step will increase the input validation of your client, and should not affect your production functionality.
 
-## Usage
+### Using A Custom WebSocket Endpoint
 
-Download and run the docker image to host your own SignalR echo server
-
-    docker pull ghcr.io/equinor/signalr-echo-server
-
-    docker run --rm -p 5000:5000 ghcr.io/equinor/signalr-echo-server
-
-This will host a webserver on port 5000
-
-The backend SignalR server can host the WebSocket URL on any endpoint on the server, but defaults to `/echo`.
-To set something else that fits your client under test, set the environment variable `ECHO_WS_ENDPOINT` 
-to the desired endpoint path for your WebSocket.
+To set something else that fits your client under test, set the environment variable `ECHO_WS_ENDPOINT` to the desired endpoint path for your WebSocket.
 
 Example for setting a different ws endpoint:
 
@@ -37,24 +46,42 @@ Example for setting a different ws endpoint:
 docker run --rm -p 5000:5000 -e "ECHO_WS_ENDPOINT=/my-web-socket-endpoint" \
 ghcr.io/equinor/signalr-echo-server
 ```
-    
+
+**NB**
+
+Changing the default endpoint means that the Web UI hosted will not work.
 
 ### Test UI
 
 Open your web browser on `http://localhost:5000`. 
-This will show a test page for trying out the servers functionality, and send payloads to be passed on the WebSocket.
+This will show a test page for sending and receiving SignalR messages over WebSocket.
+
+#### Add Topics
+
+Topics can be subscribed to in the client by using the `Add` button. This will append the topic to the `Active subscriptions` list.
+To remove an active subscription, just click on the item.
+
+#### Send Payloads
+
+When sending a `Topic` and a `Payload` from the client, that topic gets automatically added to the list of `Active subscriptions`, 
+if it is not already part of the list.
+The resulting SignalR message should return and display in the client.
+
+#### Receive Messages
+
+All messages posted on topics that the client currently subscribes to, will be displayed in the `Payload from WebSocket` section on the client.
+The received message `Topic` will also show above the payload.
+
+You can now subscribe to different topics in the client, post messages to the `/api/echo` endpoint,
+and see these messages show up in the web client when received on the SignalR subscription.
 
 **NB**
 
-The web console is only listening on the default endpoint `/echo`, and will only receive messages with the `ReceiveMessage`.
-
 When running the backend on a different endpoint the web console will not receive or display these messages.
-If the default endpoint is used, but a different topic, then the response will not show on the test page, 
-but they will still show up in the debug console
 
 ### HTTP Endpoint testing
 
-It is also possible to use `Postman`, or any other HTTP tool to append data for the websocket to send out.
+It is possible to use `Postman`, or any other HTTP tool to append data for the SignalR server to send out.
 
 The echo server understands the following POST Body
 
@@ -102,7 +129,7 @@ docker run --rm -p 5000:5000 ghcr.io/equinor/signalr-echo-server
 ```
 2. Navigate to `http://localhost:5000` in you web browser
 3. (Optional) Open the developer tools, and look in the `WS` part of the network tab.
-4. (Optional) Reconnect of needed.
+4. (Optional) Reconnect if needed.
 5. Paste the following payload in the `Payload` box, and press `Send`:
 
 ```json
@@ -122,17 +149,16 @@ docker run --rm -p 5000:5000 ghcr.io/equinor/signalr-echo-server
     "SomeOtherArrayOfThins": []
 }
 ```
-6. (Optional) Verify that you receive the expected message in the `WS` network stack with the correct topic (`ReceiveMessage`) and payload.
-7. The resulting WebSocket JSON object payload received, is displayed on the web client
+6. The resulting WebSocket JSON object payload received should now be displayed in the web client
 
 ## Example - Testing with Postman
 
-1. Start the echo server with custom values:
+1. Start the echo server with default values:
 ```sh 
-docker run --rm -p 5000:5000 -e "ECHO_WS_ENDPOINT=/my-web-socket-endpoint" \
-ghcr.io/equinor/signalr-echo-server
+docker run --rm -p 5000:5000 ghcr.io/equinor/signalr-echo-server
 ```
-2. Start you web client, and connect to the websocket on `http://localhost:5000/my-web-socket-endpoint`
+2. Navigate to `http://localhost:5000` in you web browser
+3. Add topics in the web client using the `Add` button. This example uses the `YourExpectedTopic` topic
 3. Start postman and `POST` a request to `http://localhost:5000/api/echo` with the body you want to receive in the client. 
 
    Example Body:
@@ -140,13 +166,14 @@ ghcr.io/equinor/signalr-echo-server
 {
     "topic": "YourExpectedTopic",
     "payload": {"ExampleItems":  [
-      {"Item":  { }},
-      {"Item":  { }}
+      {"Item":  {
+         "Name": "Some Name"
+      }},
+      {"Item":  {
+         "Name": "Some Other Name"
+      }}
     ]}
 }
 ````
-4. Send the request and watch for expected behaviour in the client
-5. The `Postman` Response will contain the parsed payload for debugging
-
-If using the default endpoint (`/echo`), and the default topic (`ReceiveMessage`), 
-the web client will display the resulting WebSocket JSON object payload received on the web page
+4. Send the request and see the resulting SignalR message show up in the web client
+5. The `Postman` Response will also contain the parsed payload for debugging

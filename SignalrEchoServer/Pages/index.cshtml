@@ -1,50 +1,76 @@
 @page
 <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SignalR Echo Server</title>
-    <!-- <script src="./script.js" defer></script> -->
-    <link rel="stylesheet" href="https://eds-static.equinor.com/font/equinor-font.css" />
-    <link rel="stylesheet" href="https://eds-static.equinor.com/font/equinor-mono.css" />
-    <link rel="stylesheet" href="~/styles.css" />
-    <script src="~/script.js" defer></script>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SignalR Echo Server</title>
+  <link
+    rel="icon"
+    href="https://eds-static.equinor.com/logo/equinor-logo-primary.svg#red"
+  />
+  <link
+    rel="stylesheet"
+    href="https://eds-static.equinor.com/font/equinor-font.css"
+  />
+  <link
+    rel="stylesheet"
+    href="https://eds-static.equinor.com/font/equinor-mono.css"
+  />
+  <link rel="stylesheet" href="~/styles.css" />
+  <script src="~/lib/signalr.js" defer></script>
+  <script src="~/utils.js" defer></script>
+  <script src="~/script.js" defer></script>
 </head>
 <header>
-    <a href="https://www.equinor.com/">
-        <img
-            src="https://eds-static.equinor.com/logo/equinor-logo-primary.svg#red"
-            alt="Equinor"
-            width="50"
-        />
-    </a>
-    <h1>SignalR Echo Server</h1>
-    <a 
-        class="github-link" 
-        href="https://github.com/equinor/signalr-echo-server" 
-        tabindex="3">
-        <img src="./github-logo.png" alt="GitHub" width="40" />
-    </a>
+  <a href="https://www.equinor.com/">
+    <img
+      src="https://eds-static.equinor.com/logo/equinor-logo-primary.svg#red"
+      alt="Equinor"
+      width="90"
+    />
+  </a>
+  <h1>SignalR Echo Server</h1>
+  <a
+    class="github-link"
+    href="https://github.com/equinor/signalr-echo-server"
+    tabindex="3"
+  >
+    <img src="./github-logo.png" alt="GitHub" width="40" />
+  </a>
 </header>
 
 <main>
-    <form>
+  <form id="input-form">
     <label for="topic">Topic</label>
-    <input required name="topic" id="topic" value="ReceiveMessage" />
-    <p class="helper-text">
-        Open the network tab in the inspector to see messages <br />with topics other than
-        <code>ReceiveMessage</code>.
-    </p>
-    <label for="payload">Payload </label>
-    <textarea required name="payload" id="payload" rows="6" cols="50"></textarea>
-    <div>
-        <button type="submit" id="submit">Send</button> or <code>CMD</code> / <code>CTRL</code> +
-        <code>ENTER</code>
+    <div class="add-subscription-wrapper">
+      <input required min="1" name="topic" id="topic" value="ReceiveMessage" />
+      <button id="add-topic">Add</button>
     </div>
-    </form>
+    <label for="payload">Payload</label>
+    <textarea
+      required
+      name="payload"
+      id="payload"
+      rows="6"
+      cols="50"
+    ></textarea>
     <div>
-    <label for="preview">Payload from WebSocket</label>
+      <button type="submit" id="submit">Send</button> or <code>CMD</code> /
+      <code>CTRL</code> +
+      <code>ENTER</code>
+    </div>
+  </form>
+
+  <div>
+    <div>
+      <label for="active-subscriptions-list">Active subscriptions</label>
+      <ul id="active-subscriptions-list"></ul>
+    </div>
+
+    <label for="preview"
+      >Payload from WebSocket on topic
+      <code id="topic-received">ReceiveMessage</code></label
+    >
     <p id="preview"></p>
-    </div>
+  </div>
 </main>
-<script src="~/lib/signalr.js"></script>
