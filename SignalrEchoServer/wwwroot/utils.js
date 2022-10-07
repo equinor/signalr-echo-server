@@ -11,7 +11,7 @@ const autoReziseTextarea = (textarea) => {
   textarea.setAttribute(
     "style",
     `height:${initialScrollHeight}px;` +
-      // `width:${payloadInput.scrollWidth};` +
+      `width:${(window.innerWidth / 2) * 0.8};` +
       "overflow-y:hidden;"
   );
   textarea.addEventListener("input", reziseTextarea, false);
