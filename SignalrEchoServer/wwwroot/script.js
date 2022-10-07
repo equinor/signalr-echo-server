@@ -2,7 +2,6 @@
 
 // Elements
 const form = document.querySelector("form");
-const payloadInput = document.getElementById("payload");
 const addTopicButton = document.getElementById("add-topic");
 const topicInput = document.getElementById("topic");
 const topicReceived = document.getElementById("topic-received");
@@ -10,14 +9,13 @@ const preview = document.getElementById("preview");
 const acitveSubscriptionsList = document.getElementById(
   "active-subscriptions-list"
 );
+const payloadInput = document.getElementById("payload");
+autoReziseTextarea(payloadInput);
 
-const state = {
-  subscriptions: [],
-  initialScrollHeight: payloadInput.scrollHeight,
-};
+/* Rendering callbacks */
 const renderSubscriptions = () => {
   acitveSubscriptionsList.innerHTML = "";
-  state.subscriptions.forEach((topic) => {
+  subscriptions.forEach((topic) => {
     const li = document.createElement("li");
     li.onclick = () => unsubscribe(topic);
     const code = document.createElement("code");
@@ -26,61 +24,37 @@ const renderSubscriptions = () => {
     acitveSubscriptionsList.appendChild(li);
   });
 };
-
-// Add auto rezise
-function reziseTextarea() {
-  if (this.scrollHeight === state.initialScrollHeight) return;
-  if (this.scrollHeight < state.initialScrollHeight) {
-    this.style.height = 0;
-    this.style.height = state.initialScrollHeight + "px";
-  } else {
-    this.style.height = 0;
-    this.style.height = this.scrollHeight + "px";
-  }
-}
-payloadInput.setAttribute(
-  "style",
-  `height:${state.initialScrollHeight}px;` + "overflow-y:hidden;"
-);
-payloadInput.addEventListener("input", reziseTextarea, false);
-
-const formatResponseToOutput = (response) => {
-  try {
-    return JSON.stringify(JSON.parse(response), null, 2);
-  } catch (e) {
-    return response;
-  }
+const handlePayloadReceived = (topic) => (payload) => {
+  topicReceived.textContent = topic;
+  preview.textContent = formatPayload(payload);
 };
 
-async function unsubscribe(topic) {
-  if (!state.subscriptions.includes(topic)) return;
-  state.subscriptions.splice(state.subscriptions.indexOf(topic), 1);
+/* Handle subscription on topics */
+const subscriptions = [];
+const unsubscribe = async (topic) => {
+  // Not subscribed to topic
+  if (!subscriptions.includes(topic)) return;
+
   await connection.off(topic);
+  subscriptions.splice(subscriptions.indexOf(topic), 1);
   renderSubscriptions();
-}
+};
 
 const subscribe = async (topic) => {
-  if (!topic?.length) return;
-  if (state.subscriptions.includes(topic)) return;
+  // Undefined topic
+  if (!topic) return;
+  // Already subscribed
+  if (subscriptions.includes(topic)) return;
 
-  state.subscriptions.push(topic);
-  connection.on(topic, (payload) => {
-    preview.textContent = formatResponseToOutput(payload);
-    topicReceived.textContent = topic;
-  });
-
+  subscriptions.push(topic);
+  connection.on(topic, handlePayloadReceived(topic));
   renderSubscriptions();
 };
 
+/* Start connection */
 const connection = new signalR.HubConnectionBuilder().withUrl("/echo").build();
-subscribe("ReceiveMessage");
-
-connection
-  .start()
-  /* .then(function () {
-    submitButton.disabled = false; // TODO: Implement
-  }) */
-  .catch((err) => console.error(err.toString()));
+connection.start().catch(console.error);
+subscribe("ReceiveMessage"); // Subscribe on default message
 
 const handleSubmit = async () => {
   const topic = topicInput.value;
@@ -89,22 +63,20 @@ const handleSubmit = async () => {
 
   let payload = payloadInput.value;
   try {
-    payload = JSON.stringify(JSON.parse(payload)).replace(/\\/g, "");
+    payload = JSON.stringify(JSON.parse(payload));
   } catch (e) {}
   connection.invoke("SendMessage", topic, payload).catch(console.error);
 };
 
-const handleSetTopic = async () => {
-  await subscribe(topicInput.value);
-};
+const handleSetTopic = async () => await subscribe(topicInput.value);
 
-const submitOnKeyStroke = (callback) => (e) => {
+const handleKeyStroke = (callback) => (e) => {
   if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) callback();
 };
 
-// Event handlers
-payloadInput.onkeydown = submitOnKeyStroke(handleSubmit);
-topicInput.onkeydown = submitOnKeyStroke(handleSetTopic);
+/* Event handlers */
+payloadInput.onkeydown = handleKeyStroke(handleSubmit);
+topicInput.onkeydown = handleKeyStroke(handleSetTopic);
 addTopicButton.onclick = (e) => {
   e.preventDefault();
   if (topicInput.value.length) subscribe(topicInput.value);
