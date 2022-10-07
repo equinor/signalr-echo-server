@@ -1,6 +1,6 @@
 "use strict";
 
-// Elements
+/* Elements */
 const form = document.querySelector("form");
 const addTopicButton = document.getElementById("add-topic");
 const topicInput = document.getElementById("topic");
